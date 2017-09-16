@@ -18,5 +18,14 @@ namespace GcdApi.API
 
             return Ok(data);
         }
+
+        [HttpGet]
+        [Route("api/_search/{q}")]
+        public IHttpActionResult _Search(string q)
+        {
+            GcdData data = new Utility().GetServies(q);
+
+            return Ok(data);
+        }
     }
 }
