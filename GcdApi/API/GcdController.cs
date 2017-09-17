@@ -29,5 +29,14 @@ namespace GcdApi.API
 
             return Ok(data);
         }
+
+        [HttpGet]
+        [Route("api/_search/{longitude}/{latitude}/{maxDistance}")]
+        public IHttpActionResult _Search(decimal longitude, decimal latitude, decimal maxDistance)
+        {
+            GcdData data = new Utility().GetServiesByLocation(longitude, latitude, maxDistance);
+
+            return Ok(data);
+        }
     }
 }

@@ -7,7 +7,7 @@ namespace GcdApi.Models
 {
     public class GcdData
     {
-        public int PageNumber { get; set; }
+        public int? PageNumber { get; set; }
         public ServiceDto[] Services { get; set; }
     }
 
