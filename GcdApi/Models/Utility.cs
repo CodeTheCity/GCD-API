@@ -115,7 +115,7 @@ namespace GcdApi.Models
 
             using (SqlConnection myConnection = new SqlConnection(con))
             {
-                string oString = $"SELECT * FROM Services WHERE {nameof(ServiceDto.metakey)} LIKE '%{query}%' ORDER BY id OFFSET {(pageNumber - 1) * 20} ROWS FETCH NEXT 20 ROWS ONLY;";
+                string oString = $"SELECT * FROM Services WHERE { GetSearchQuery(query) } ORDER BY id OFFSET {(pageNumber - 1) * 20} ROWS FETCH NEXT 20 ROWS ONLY;";
                 SqlCommand oCmd = new SqlCommand(oString, myConnection);
                 myConnection.Open();
                 using (SqlDataReader oReader = oCmd.ExecuteReader())
@@ -133,21 +133,14 @@ namespace GcdApi.Models
             };
         }
 
-        public GcdData GetServiesByLocation(decimal latitude, decimal longitude, decimal maxDistance)
+        public GcdData GetServiesByLocation(decimal longitude, decimal latitude, decimal maxDistance)
         {
             List<ServiceDto> services = new List<ServiceDto>();
 
             using (SqlConnection myConnection = new SqlConnection(con))
             {
-                string oString = $@"SELECT TOP 10 * 
-        FROM(SELECT *, (((acos(sin(({latitude} * pi() / 180)) *
-        sin((field_latitude * pi() / 180)) + cos(({latitude} * pi() / 180)) *
-        cos((field_latitude * pi() / 180)) * cos((({longitude} -
-        field_longitude) * pi() / 180)))) * 180 / pi()) * 60 * 1.1515 * 1.609344)
-        as distance
-        FROM Services)[Services]
-        WHERE distance <= {maxDistance}
-        ORDER BY distance";
+                string oString = $@"SELECT TOP 10 * {GetLocationQuery(longitude, latitude, maxDistance)}
+                    ORDER BY distance";
 
                 SqlCommand oCmd = new SqlCommand(oString, myConnection);
                 myConnection.Open();
@@ -163,6 +156,48 @@ namespace GcdApi.Models
             {
                 Services = services.ToArray()
             };
+        }
+
+        public GcdData GetServiesByLocation(string query, decimal longitude, decimal latitude, decimal maxDistance)
+        {
+            List<ServiceDto> services = new List<ServiceDto>();
+
+            using (SqlConnection myConnection = new SqlConnection(con))
+            {
+                string oString = $@"SELECT TOP 10 * {GetLocationQuery(longitude, latitude, maxDistance)} 
+                    AND {GetSearchQuery(query)}
+                    ORDER BY distance";
+
+                SqlCommand oCmd = new SqlCommand(oString, myConnection);
+                myConnection.Open();
+                using (SqlDataReader oReader = oCmd.ExecuteReader())
+                {
+                    services = oReader.ReadList(ServiceRowToDto);
+
+                    myConnection.Close();
+                }
+            }
+
+            return new GcdData
+            {
+                Services = services.ToArray()
+            };
+        }
+
+        private string GetSearchQuery(string query)
+        {
+            return $"{nameof(ServiceDto.metakey)} LIKE '%{query}%'";
+        }
+
+        private string GetLocationQuery(decimal longitude, decimal latitude, decimal maxDistance)
+        {
+            return $@"FROM(SELECT *, (((acos(sin(({latitude} * pi() / 180)) *
+                sin((field_latitude * pi() / 180)) + cos(({latitude} * pi() / 180)) *
+                cos((field_latitude * pi() / 180)) * cos((({longitude} -
+                field_longitude) * pi() / 180)))) * 180 / pi()) * 60 * 1.1515 * 1.609344)
+                as distance
+                FROM Services)[Services]
+                WHERE distance <= {maxDistance}";
         }
     }
 

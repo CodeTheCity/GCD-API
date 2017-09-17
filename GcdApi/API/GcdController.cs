@@ -13,28 +13,37 @@ namespace GcdApi.API
     public class GcdController : ApiController
     {
         [HttpGet]
-        [Route("api/Get/{pageNumber}")]
-        public IHttpActionResult Get(int pageNumber)
+        [Route("api/get")]
+        public IHttpActionResult Get(int page)
         {
-            GcdData data = new Utility().GetServies(pageNumber);
+            GcdData data = new Utility().GetServies(page);
 
             return Ok(data);
         }
 
         [HttpGet]
-        [Route("api/_search/{q}/{pageNumber}")]
-        public IHttpActionResult _Search(string q, int pageNumber)
+        [Route("api/_search/")]
+        public IHttpActionResult _Search(string q, int page)
         {
-            GcdData data = new Utility().GetServies(q, pageNumber);
+            GcdData data = new Utility().GetServies(q, page);
 
             return Ok(data);
         }
 
         [HttpGet]
-        [Route("api/_search/{longitude}/{latitude}/{maxDistance}")]
-        public IHttpActionResult _Search(decimal longitude, decimal latitude, decimal maxDistance)
+        [Route("api/_search")]
+        public IHttpActionResult _Search(decimal lon, decimal lat, decimal maxDistance)
         {
-            GcdData data = new Utility().GetServiesByLocation(longitude, latitude, maxDistance);
+            GcdData data = new Utility().GetServiesByLocation(lon, lat, maxDistance);
+
+            return Ok(data);
+        }
+
+        [HttpGet]
+        [Route("api/_search")]
+        public IHttpActionResult _Search(string q, decimal lon, decimal lat, decimal maxDistance)
+        {
+            GcdData data = new Utility().GetServiesByLocation(q, lon, lat, maxDistance);
 
             return Ok(data);
         }
