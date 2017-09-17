@@ -10,6 +10,12 @@ namespace GcdApi.Models
 {
     public class Utility
     {
+#if (DEBUG)
+        private string con = @"Server=TODD\SQLEXPRESS;Database=GCD;Integrated Security=True;";
+#else
+        private string con = Properties.Settings.Default.Connection;
+#endif
+
         private Func<IDataRecord, ServiceDto> ServiceRowToDto => row => new ServiceDto
         {
             id = (int)row[nameof(ServiceDto.id)],
@@ -72,15 +78,13 @@ namespace GcdApi.Models
             updating_user = row[nameof(ServiceDto.updating_user)].ToString(),
         };
 
-        public GcdData GetServies()
+        public GcdData GetServies(int pageNumber)
         {
-            string con = Properties.Settings.Default.Connection;
-
             List<ServiceDto> services = new List<ServiceDto>();
 
             using (SqlConnection myConnection = new SqlConnection(con))
             {
-                string oString = "SELECT * FROM Services";
+                string oString = $"SELECT * FROM Services ORDER BY id OFFSET {(pageNumber - 1) * 20} ROWS FETCH NEXT 20 ROWS ONLY;";
                 SqlCommand oCmd = new SqlCommand(oString, myConnection);
                 myConnection.Open();
                 using (SqlDataReader oReader = oCmd.ExecuteReader())
@@ -93,15 +97,16 @@ namespace GcdApi.Models
 
             return new GcdData
             {
+                PageNumber = pageNumber,
                 Services = services.ToArray()
             };
         }
 
-        public GcdData GetServies(string query)
+        public GcdData GetServies(string query, int pageNumber)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
-                return GetServies();
+                return GetServies(1);
             }
 
             query = query.Trim();
@@ -112,7 +117,7 @@ namespace GcdApi.Models
 
             using (SqlConnection myConnection = new SqlConnection(con))
             {
-                string oString = "SELECT * FROM Services WHERE " + nameof(ServiceDto.metakey) + " LIKE '%" + query + "%'";
+                string oString = "SELECT * FROM Services WHERE " + nameof(ServiceDto.metakey) + " LIKE '%" + query + "%' ORDER BY id OFFSET {(pageNumber - 1) * 20} ROWS FETCH NEXT 20 ROWS ONLY;";
                 SqlCommand oCmd = new SqlCommand(oString, myConnection);
                 myConnection.Open();
                 using (SqlDataReader oReader = oCmd.ExecuteReader())
@@ -125,6 +130,7 @@ namespace GcdApi.Models
 
             return new GcdData
             {
+                PageNumber = pageNumber,
                 Services = services.ToArray()
             };
         }
