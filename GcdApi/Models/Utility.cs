@@ -186,7 +186,7 @@ namespace GcdApi.Models
 
         private string GetSearchQuery(string query)
         {
-            return $"{nameof(ServiceDto.metakey)} LIKE '%{query}%'";
+            return $"({nameof(ServiceDto.metakey)} LIKE '%{query}%' OR {nameof(ServiceDto.title)} LIKE '%{query}%')";
         }
 
         private string GetLocationQuery(decimal longitude, decimal latitude, decimal maxDistance)
